@@ -64,13 +64,26 @@ public class CameraHolder {
     }
 
     private Camera.Size getOptimalPreviewSize() {
-        // Fullscreen size is always supported(?)
-        // TODO: select size with aspect ratio
+        float ratio = mRequestedPreviewWidth / (float) mRequestedPreviewHeight;
+        long area = mRequestedPreviewWidth * mRequestedPreviewHeight;
+        Camera.Size res = mSupportedPreviewSizes.get(0);
+        float minRatioDiff = Float.MAX_VALUE;
+        long minAreaDiff = Long.MAX_VALUE;
         for (Camera.Size size : mSupportedPreviewSizes) {
-            if (size.width == mRequestedPreviewWidth && size.height == mRequestedPreviewHeight)
-                return size;
+            float ratio1 = size.width / (float) size.height;
+            float ratioDiff = Math.abs(ratio1 - ratio);
+
+            long area1 = size.width * size.height;
+            long areaDiff = Math.abs(area1 - area);
+
+            if (ratioDiff < minRatioDiff
+                    || (Math.abs(ratioDiff - minRatioDiff) < 1e-6 && areaDiff < minAreaDiff)) {
+                minRatioDiff = ratioDiff;
+                minAreaDiff = areaDiff;
+                res = size;
+            }
         }
-        return mSupportedPreviewSizes.get(0);
+        return res;
     }
 
     public void start() {

@@ -29,6 +29,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCameraHolder = holder;
     }
 
+    // TODO: resize view to keep preview aspect ratio
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         mCameraHolder.setPreviewDisplay(holder);
