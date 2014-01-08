@@ -2,11 +2,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
+    <LinearLayout
+        android:id="@+id/toolbar_left"
+        android:layout_width="106.66dp"
+        android:layout_height="match_parent" >
+
+        <Button
+            android:id="@+id/action_capture"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Capture" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/toolbar_right"
+        android:layout_width="106.66dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true" >
+    </View>
+
     <FrameLayout
         android:id="@+id/preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="106.66dp"
-        android:layout_marginRight="106.66dp" />
+        android:layout_toLeftOf="@id/toolbar_right"
+        android:layout_toRightOf="@id/toolbar_left" />
 
 </RelativeLayout>

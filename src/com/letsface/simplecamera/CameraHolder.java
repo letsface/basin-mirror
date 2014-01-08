@@ -45,6 +45,10 @@ public class CameraHolder {
         return mCamera != null;
     }
 
+    public Camera getCamera() {
+        return mCamera;
+    }
+
     private void getPreviewSizes() {
         if (!ready())
             return;
