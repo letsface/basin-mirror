@@ -33,6 +33,7 @@ public class CameraHolder {
     private void open() {
         try {
             stop();
+            // TODO: async open
             mCamera = Camera.open(mCameraId);
             getPreviewSizes();
         } catch (RuntimeException e) {
