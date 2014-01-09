@@ -2,6 +2,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
+    <ImageView
+        android:id="@+id/still_preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/cd_still_preview"
+        android:scaleType="centerInside" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -14,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
-            android:text="Retake" />
+            android:text="@string/action_retake" />
 
         <Button
             android:id="@+id/action_confirm"
@@ -22,13 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
-            android:text="Use this photo" />
+            android:text="@string/action_confirm" />
     </LinearLayout>
-
-    <ImageView
-        android:id="@+id/still_preview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerInside" />
 
 </RelativeLayout>

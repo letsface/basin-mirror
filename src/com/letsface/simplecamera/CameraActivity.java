@@ -2,38 +2,74 @@
 package com.letsface.simplecamera;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class CameraActivity extends Activity implements OnClickListener {
 
     private static final int REQ_CONFIRM_PICTURE = 1000;
 
-    public static final String EXTRA_CAMERA = "extra_camera";
-    public static final String CAMERA_BACK = "back";
-    public static final String CAMERA_FRONT = "front";
+    private static final String EXTRA_FRONT_CAMERA = "extra_front_camera";
+    private static final String EXTRA_CONFIRM = "extra_confirm";
+
+    public static class IntentBuilder {
+
+        private Context mContext;
+        private boolean mUseFront, mConfirm;
+
+        public IntentBuilder(Context context) {
+            mContext = context;
+        }
+
+        public IntentBuilder setUseFrontCamera(boolean useFront) {
+            mUseFront = useFront;
+            return this;
+        }
+
+        public IntentBuilder setConfirm(boolean confirm) {
+            mConfirm = confirm;
+            return this;
+        }
+
+        public Intent build() {
+            Intent intent = new Intent(mContext, CameraActivity.class);
+            intent.putExtra(EXTRA_FRONT_CAMERA, mUseFront);
+            intent.putExtra(EXTRA_CONFIRM, mConfirm);
+            return intent;
+        }
+
+    }
+
+    private boolean usesFrontCamera() {
+        return getIntent().getBooleanExtra(EXTRA_FRONT_CAMERA, false);
+    }
+
+    private boolean needsConfirm() {
+        return getIntent().getBooleanExtra(EXTRA_CONFIRM, false);
+    }
 
     private CameraHolder mCameraHolder;
-
-    private int getIntentCameraId() {
-        Intent intent = getIntent();
-        String camera = intent.getStringExtra(EXTRA_CAMERA);
-        if (CAMERA_FRONT.equals(camera)) {
-            return Camera.CameraInfo.CAMERA_FACING_FRONT;
-        }
-        return Camera.CameraInfo.CAMERA_FACING_BACK;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +82,8 @@ public class CameraActivity extends Activity implements OnClickListener {
         setContentView(R.layout.activity_camera);
 
         mCameraHolder = new CameraHolder();
-        mCameraHolder.setCameraId(getIntentCameraId());
+        if (usesFrontCamera())
+            mCameraHolder.setCameraId(CameraInfo.CAMERA_FACING_FRONT);
 
         CameraPreview preview = new CameraPreview(this);
         preview.setCameraHolder(mCameraHolder);
@@ -83,44 +120,67 @@ public class CameraActivity extends Activity implements OnClickListener {
         camera.takePicture(null, null, mPictureCallback);
     }
 
-    private byte[] mPictureData;
+    private String mPictureFilePath;
+
+    private File getOutputFile() {
+        File storage = new File(Environment.getExternalStorageDirectory(), "BasinMirror");
+        storage.mkdirs();
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+                .format(new Date());
+        return new File(storage, "IMG_" + timestamp + ".jpg");
+    }
 
     private final PictureCallback mPictureCallback = new PictureCallback() {
-
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
-            mPictureData = data;
-            showConfirmActivity();
+            try {
+                File file = getOutputFile();
+                FileOutputStream fos = new FileOutputStream(file);
+                try {
+                    fos.write(data);
+                } finally {
+                    fos.close();
+                }
+                mPictureFilePath = file.getAbsolutePath();
+                afterPictureTaken();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-
     };
 
-    private Bitmap getPreviewPicture() {
-        DisplayMetrics dm = getResources().getDisplayMetrics();
-        int targetW = dm.widthPixels;
-        int targetH = dm.heightPixels;
+    private void afterPictureTaken() {
+        if (needsConfirm()) {
+            showConfirmActivity();
+        } else {
+            confirmed();
+        }
+    }
 
-        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeByteArray(mPictureData, 0, mPictureData.length, bmOptions);
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
+    private Bitmap getPreviewPicture() {
+        int targetW = 100;
+        int targetH = 100;
+
+        BitmapFactory.Options opts = new BitmapFactory.Options();
+        opts.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(mPictureFilePath, opts);
+        int photoW = opts.outWidth;
+        int photoH = opts.outHeight;
 
         int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
 
-        bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
-        bmOptions.inPurgeable = true;
+        opts.inJustDecodeBounds = false;
+        opts.inSampleSize = scaleFactor;
+        opts.inPurgeable = true;
 
-        Bitmap bitmap = BitmapFactory.decodeByteArray(mPictureData, 0, mPictureData.length,
-                bmOptions);
+        Bitmap bitmap = BitmapFactory.decodeFile(mPictureFilePath, opts);
         return bitmap;
     }
 
     private void showConfirmActivity() {
-        Bitmap bitmap = getPreviewPicture();
         Intent intent = new Intent(this, PictureConfirmActivity.class);
-        intent.putExtra(PictureConfirmActivity.EXTRA_IMAGE, bitmap);
+        Uri uri = Uri.fromFile(new File(mPictureFilePath));
+        intent.putExtra(PictureConfirmActivity.EXTRA_URI, uri);
         startActivityForResult(intent, REQ_CONFIRM_PICTURE);
     }
 
@@ -140,11 +200,14 @@ public class CameraActivity extends Activity implements OnClickListener {
     }
 
     private void confirmed() {
-        Toast.makeText(this, "confirmed", Toast.LENGTH_LONG).show();
+        Intent intent = new Intent();
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(mPictureFilePath)));
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     private void retake() {
-        Toast.makeText(this, "retake", Toast.LENGTH_LONG).show();
+        // do nothing
     }
 
 }
