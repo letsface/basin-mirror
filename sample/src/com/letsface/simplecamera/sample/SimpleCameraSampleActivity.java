@@ -3,6 +3,7 @@ package com.letsface.simplecamera.sample;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -20,7 +21,7 @@ public class SimpleCameraSampleActivity extends Activity implements OnClickListe
 
     private RadioGroup mCameraSelect;
     private CheckBox mConfirmCheck;
-    private ImageView mImage;
+    private ImageView mPreview, mImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +30,7 @@ public class SimpleCameraSampleActivity extends Activity implements OnClickListe
 
         mCameraSelect = (RadioGroup) findViewById(R.id.camera_select);
         mConfirmCheck = (CheckBox) findViewById(R.id.confirm);
+        mPreview = (ImageView) findViewById(R.id.preview);
         mImage = (ImageView) findViewById(R.id.image);
 
         findViewById(R.id.action_capture).setOnClickListener(this);
@@ -57,6 +59,10 @@ public class SimpleCameraSampleActivity extends Activity implements OnClickListe
     }
 
     private void loadImage(Intent data) {
+        Bitmap bmp = data.getParcelableExtra("data");
+        if (bmp != null) {
+            mPreview.setImageBitmap(bmp);
+        }
         Uri uri = data.getParcelableExtra(MediaStore.EXTRA_OUTPUT);
         if (uri != null) {
             mImage.setImageURI(uri);

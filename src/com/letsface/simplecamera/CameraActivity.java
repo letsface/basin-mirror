@@ -202,6 +202,7 @@ public class CameraActivity extends Activity implements OnClickListener {
     private void confirmed() {
         Intent intent = new Intent();
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(mPictureFilePath)));
+        intent.putExtra("data", getPreviewPicture());
         setResult(RESULT_OK, intent);
         finish();
     }
