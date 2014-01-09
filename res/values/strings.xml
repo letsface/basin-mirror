@@ -4,5 +4,6 @@
     <string name="cd_still_preview">Preview</string>
     <string name="action_retake">Retake</string>
     <string name="action_confirm">Use this photo</string>
+    <string name="cd_action_capture">Take photo</string>
 
 </resources>

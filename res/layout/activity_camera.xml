@@ -2,25 +2,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <LinearLayout
+    <View
         android:id="@+id/toolbar_left"
         android:layout_width="106.66dp"
         android:layout_height="match_parent" >
+    </View>
 
-        <Button
-            android:id="@+id/action_capture"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="Capture" />
-    </LinearLayout>
-
-    <View
+    <LinearLayout
         android:id="@+id/toolbar_right"
         android:layout_width="106.66dp"
         android:layout_height="match_parent"
         android:layout_alignParentRight="true" >
-    </View>
+
+        <ImageButton
+            android:id="@+id/action_capture"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@string/cd_action_capture"
+            android:src="@drawable/ic_action_capture" />
+    </LinearLayout>
 
     <FrameLayout
         android:id="@+id/preview"
