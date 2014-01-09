@@ -23,9 +23,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.letsface.simplecamera.CameraActivity"
-            android:screenOrientation="landscape" />
+        <activity android:name="com.letsface.simplecamera.CameraActivity" />
         <activity android:name="com.letsface.simplecamera.PictureConfirmActivity" />
     </application>
 

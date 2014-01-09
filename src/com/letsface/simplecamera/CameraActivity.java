@@ -4,6 +4,7 @@ package com.letsface.simplecamera;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
@@ -78,10 +79,12 @@ public class CameraActivity extends Activity implements OnClickListener {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR
+                | ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         setContentView(R.layout.activity_camera);
 
-        mCameraHolder = new CameraHolder();
+        mCameraHolder = new CameraHolder(this);
         if (usesFrontCamera())
             mCameraHolder.setCameraId(CameraInfo.CAMERA_FACING_FRONT);
 

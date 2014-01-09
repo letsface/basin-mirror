@@ -1,9 +1,11 @@
 
 package com.letsface.simplecamera;
 
-import android.app.Activity;
+import android.content.Context;
 import android.hardware.Camera;
-import android.view.Surface;
+import android.hardware.Camera.CameraInfo;
+import android.hardware.SensorManager;
+import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 
 import java.io.IOException;
@@ -16,6 +18,11 @@ public class CameraHolder {
     private SurfaceHolder mHolder;
     private int mRequestedPreviewWidth, mRequestedPreviewHeight;
     private List<Camera.Size> mSupportedPreviewSizes;
+    private OrientationListener mOrientationListener;
+
+    public CameraHolder(Context context) {
+        mOrientationListener = new OrientationListener(context);
+    }
 
     public void setCameraId(int id) {
         mCameraId = id;
@@ -32,7 +39,7 @@ public class CameraHolder {
 
     private void open() {
         try {
-            stop();
+            stopPreviewAndRelease();
             // TODO: async open
             mCamera = Camera.open(mCameraId);
             getPreviewSizes();
@@ -91,6 +98,8 @@ public class CameraHolder {
     }
 
     public void start() {
+        mOrientationListener.enable();
+
         open();
         if (!ready())
             return;
@@ -105,6 +114,11 @@ public class CameraHolder {
     }
 
     public void stop() {
+        mOrientationListener.disable();
+        stopPreviewAndRelease();
+    }
+
+    private void stopPreviewAndRelease() {
         if (!ready())
             return;
 
@@ -113,39 +127,41 @@ public class CameraHolder {
         mCamera = null;
     }
 
-    public void setCameraDisplayOrientation(Activity activity) {
+    private void setRotate(int rotation) {
         if (!ready())
             return;
+        Camera.Parameters params = mCamera.getParameters();
+        params.setRotation(rotation);
+        mCamera.setParameters(params);
+    }
 
-        Camera.CameraInfo info = new Camera.CameraInfo();
-        Camera.getCameraInfo(mCameraId, info);
+    private class OrientationListener extends OrientationEventListener {
 
-        int rotation = activity.getWindowManager().getDefaultDisplay()
-                .getRotation();
-        int degrees = 0;
-        switch (rotation) {
-            case Surface.ROTATION_0:
-                degrees = 0;
-                break;
-            case Surface.ROTATION_90:
-                degrees = 90;
-                break;
-            case Surface.ROTATION_180:
-                degrees = 180;
-                break;
-            case Surface.ROTATION_270:
-                degrees = 270;
-                break;
+        private int mRotation = -1;
+
+        public OrientationListener(Context context) {
+            super(context, SensorManager.SENSOR_DELAY_UI);
         }
 
-        int result;
-        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            result = (info.orientation + degrees) % 360;
-            result = (360 - result) % 360; // compensate the mirror
-        } else { // back-facing
-            result = (info.orientation - degrees + 360) % 360;
+        @Override
+        public void onOrientationChanged(int orientation) {
+            if (orientation == ORIENTATION_UNKNOWN)
+                return;
+            CameraInfo info = new CameraInfo();
+            Camera.getCameraInfo(mCameraId, info);
+            orientation = (orientation + 45) / 90 * 90;
+            int rotation = 0;
+            if (info.facing == CameraInfo.CAMERA_FACING_FRONT) {
+                rotation = (info.orientation - orientation + 360) % 360;
+            } else {
+                rotation = (info.orientation + orientation) % 360;
+            }
+            if (mRotation != rotation) {
+                setRotate(rotation);
+                mRotation = rotation;
+            }
         }
-        mCamera.setDisplayOrientation(result);
+
     }
 
 }
