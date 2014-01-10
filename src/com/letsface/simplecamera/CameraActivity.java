@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
@@ -19,6 +20,9 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageButton;
+
+import com.letsface.simplecamera.ScreenOrientationObserver.OnOrientationChangeListener;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,7 +31,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class CameraActivity extends Activity implements OnClickListener {
+public class CameraActivity extends Activity implements OnClickListener,
+        OnOrientationChangeListener {
 
     private static final int REQ_CONFIRM_PICTURE = 1000;
 
@@ -71,6 +76,8 @@ public class CameraActivity extends Activity implements OnClickListener {
     }
 
     private CameraHolder mCameraHolder;
+    private ScreenOrientationObserver mOrientationObserver;
+    private ImageButton mCaptureButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +91,7 @@ public class CameraActivity extends Activity implements OnClickListener {
 
         setContentView(R.layout.activity_camera);
 
-        mCameraHolder = new CameraHolder(this);
+        mCameraHolder = new CameraHolder();
         if (usesFrontCamera())
             mCameraHolder.setCameraId(CameraInfo.CAMERA_FACING_FRONT);
 
@@ -93,19 +100,30 @@ public class CameraActivity extends Activity implements OnClickListener {
 
         ((ViewGroup) findViewById(R.id.preview)).addView(preview);
 
-        findViewById(R.id.action_capture).setOnClickListener(this);
+        mCaptureButton = (ImageButton) findViewById(R.id.action_capture);
+        mCaptureButton.setOnClickListener(this);
+
+        mOrientationObserver = new ScreenOrientationObserver(this, this);
+    }
+
+    @Override
+    public void onOrientationChange(int orientation, ScreenOrientationObserver observer) {
+        mCameraHolder.setScreenOrientation(orientation);
+        mCaptureButton.setRotation(observer.getRotation());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         mCameraHolder.start();
+        mOrientationObserver.start();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mCameraHolder.stop();
+        mOrientationObserver.stop();
     }
 
     @Override
@@ -161,8 +179,9 @@ public class CameraActivity extends Activity implements OnClickListener {
     }
 
     private Bitmap getPreviewPicture() {
-        int targetW = 100;
-        int targetH = 100;
+        // limit the size of the parcelable
+        int targetW = 200;
+        int targetH = 200;
 
         BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inJustDecodeBounds = true;
@@ -177,7 +196,14 @@ public class CameraActivity extends Activity implements OnClickListener {
         opts.inPurgeable = true;
 
         Bitmap bitmap = BitmapFactory.decodeFile(mPictureFilePath, opts);
-        return bitmap;
+        Matrix mat = new Matrix();
+        mat.postRotate(mOrientationObserver.getRotation());
+        Bitmap res = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), mat,
+                true);
+        if (bitmap != res) { // returned bitmap may be the same object
+            bitmap.recycle();
+        }
+        return res;
     }
 
     private void showConfirmActivity() {

@@ -1,11 +1,8 @@
 
 package com.letsface.simplecamera;
 
-import android.content.Context;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
-import android.hardware.SensorManager;
-import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 
 import java.io.IOException;
@@ -18,11 +15,6 @@ public class CameraHolder {
     private SurfaceHolder mHolder;
     private int mRequestedPreviewWidth, mRequestedPreviewHeight;
     private List<Camera.Size> mSupportedPreviewSizes;
-    private OrientationListener mOrientationListener;
-
-    public CameraHolder(Context context) {
-        mOrientationListener = new OrientationListener(context);
-    }
 
     public void setCameraId(int id) {
         mCameraId = id;
@@ -98,8 +90,6 @@ public class CameraHolder {
     }
 
     public void start() {
-        mOrientationListener.enable();
-
         open();
         if (!ready())
             return;
@@ -114,7 +104,6 @@ public class CameraHolder {
     }
 
     public void stop() {
-        mOrientationListener.disable();
         stopPreviewAndRelease();
     }
 
@@ -127,7 +116,7 @@ public class CameraHolder {
         mCamera = null;
     }
 
-    private void setRotate(int rotation) {
+    private void setCameraRotate(int rotation) {
         if (!ready())
             return;
         Camera.Parameters params = mCamera.getParameters();
@@ -135,33 +124,16 @@ public class CameraHolder {
         mCamera.setParameters(params);
     }
 
-    private class OrientationListener extends OrientationEventListener {
-
-        private int mRotation = -1;
-
-        public OrientationListener(Context context) {
-            super(context, SensorManager.SENSOR_DELAY_UI);
+    public void setScreenOrientation(int orientation) {
+        CameraInfo info = new CameraInfo();
+        Camera.getCameraInfo(mCameraId, info);
+        int rotation = 0;
+        if (info.facing == CameraInfo.CAMERA_FACING_FRONT) {
+            rotation = (info.orientation - orientation + 360) % 360;
+        } else {
+            rotation = (info.orientation + orientation) % 360;
         }
-
-        @Override
-        public void onOrientationChanged(int orientation) {
-            if (orientation == ORIENTATION_UNKNOWN)
-                return;
-            CameraInfo info = new CameraInfo();
-            Camera.getCameraInfo(mCameraId, info);
-            orientation = (orientation + 45) / 90 * 90;
-            int rotation = 0;
-            if (info.facing == CameraInfo.CAMERA_FACING_FRONT) {
-                rotation = (info.orientation - orientation + 360) % 360;
-            } else {
-                rotation = (info.orientation + orientation) % 360;
-            }
-            if (mRotation != rotation) {
-                setRotate(rotation);
-                mRotation = rotation;
-            }
-        }
-
+        setCameraRotate(rotation);
     }
 
 }
