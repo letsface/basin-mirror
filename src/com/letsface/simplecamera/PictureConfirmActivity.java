@@ -34,6 +34,8 @@ public class PictureConfirmActivity extends Activity implements OnClickListener 
 
         ImageView image = (ImageView) findViewById(R.id.still_preview);
         image.setImageURI(imageUri);
+        int rotation = CameraActivity.getPictureRotation(imageUri);
+        image.setRotation(rotation);
 
         findViewById(R.id.action_confirm).setOnClickListener(this);
         findViewById(R.id.action_retake).setOnClickListener(this);

@@ -11,6 +11,7 @@ import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -238,6 +239,33 @@ public class CameraActivity extends Activity implements OnClickListener,
 
     private void retake() {
         // do nothing
+    }
+
+    public static int getPictureRotation(Uri uri) {
+        return getPictureRotation(uri.getPath());
+    }
+
+    public static int getPictureRotation(String path) {
+        int rotation = 0;
+        try {
+            ExifInterface exif = new ExifInterface(path);
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL);
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotation = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotation = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotation = 270;
+                    break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rotation;
     }
 
 }

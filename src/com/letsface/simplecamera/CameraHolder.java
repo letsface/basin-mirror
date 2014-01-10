@@ -102,6 +102,7 @@ public class CameraHolder {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        setCameraRotation();
     }
 
     public void stop() {
