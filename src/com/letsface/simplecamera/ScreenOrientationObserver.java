@@ -8,12 +8,12 @@ import android.view.OrientationEventListener;
 public class ScreenOrientationObserver {
 
     public interface OnOrientationChangeListener {
-        void onOrientationChange(int orientation, ScreenOrientationObserver observer);
+        void onOrientationChange(int orientation);
     }
 
     private OnOrientationChangeListener mListener;
     private OrientationEventListener mOrientationEventListener;
-    private int mOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
+    private int mOrientation;
 
     public ScreenOrientationObserver(Context context, OnOrientationChangeListener listener) {
         mListener = listener;
@@ -27,7 +27,7 @@ public class ScreenOrientationObserver {
                 if (mOrientation != orientation) {
                     mOrientation = orientation;
                     if (mListener != null) {
-                        mListener.onOrientationChange(mOrientation, ScreenOrientationObserver.this);
+                        mListener.onOrientationChange(mOrientation);
                     }
                 }
             }
@@ -44,12 +44,6 @@ public class ScreenOrientationObserver {
 
     public int getOrientation() {
         return mOrientation;
-    }
-
-    public int getRotation() {
-        if (mOrientation == OrientationEventListener.ORIENTATION_UNKNOWN)
-            return 0;
-        return 360 - mOrientation;
     }
 
 }

@@ -15,6 +15,7 @@ public class CameraHolder {
     private SurfaceHolder mHolder;
     private int mRequestedPreviewWidth, mRequestedPreviewHeight;
     private List<Camera.Size> mSupportedPreviewSizes;
+    private int mCameraRotation;
 
     public void setCameraId(int id) {
         mCameraId = id;
@@ -116,11 +117,11 @@ public class CameraHolder {
         mCamera = null;
     }
 
-    private void setCameraRotate(int rotation) {
+    private void setCameraRotation() {
         if (!ready())
             return;
         Camera.Parameters params = mCamera.getParameters();
-        params.setRotation(rotation);
+        params.setRotation(mCameraRotation);
         mCamera.setParameters(params);
     }
 
@@ -133,7 +134,12 @@ public class CameraHolder {
         } else {
             rotation = (info.orientation + orientation) % 360;
         }
-        setCameraRotate(rotation);
+        mCameraRotation = rotation;
+        setCameraRotation();
+    }
+
+    public int getCameraRotation() {
+        return mCameraRotation;
     }
 
 }

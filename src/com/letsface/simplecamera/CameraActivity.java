@@ -107,9 +107,9 @@ public class CameraActivity extends Activity implements OnClickListener,
     }
 
     @Override
-    public void onOrientationChange(int orientation, ScreenOrientationObserver observer) {
+    public void onOrientationChange(int orientation) {
         mCameraHolder.setScreenOrientation(orientation);
-        mCaptureButton.setRotation(observer.getRotation());
+        mCaptureButton.setRotation(360 - orientation);
     }
 
     @Override
@@ -180,8 +180,8 @@ public class CameraActivity extends Activity implements OnClickListener,
 
     private Bitmap getPreviewPicture() {
         // limit the size of the parcelable
-        int targetW = 200;
-        int targetH = 200;
+        int targetW = 100;
+        int targetH = 100;
 
         BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inJustDecodeBounds = true;
@@ -197,7 +197,7 @@ public class CameraActivity extends Activity implements OnClickListener,
 
         Bitmap bitmap = BitmapFactory.decodeFile(mPictureFilePath, opts);
         Matrix mat = new Matrix();
-        mat.postRotate(mOrientationObserver.getRotation());
+        mat.postRotate(mCameraHolder.getCameraRotation());
         Bitmap res = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), mat,
                 true);
         if (bitmap != res) { // returned bitmap may be the same object

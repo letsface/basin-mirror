@@ -4,6 +4,7 @@ package com.letsface.simplecamera.sample;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -14,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.RadioGroup;
 
 import com.letsface.simplecamera.CameraActivity;
+
+import java.io.IOException;
 
 public class SimpleCameraSampleActivity extends Activity implements OnClickListener {
 
@@ -58,6 +61,33 @@ public class SimpleCameraSampleActivity extends Activity implements OnClickListe
         }
     }
 
+    private int getPictureRotation(Uri uri) {
+        return getPictureRotation(uri.getPath());
+    }
+
+    private int getPictureRotation(String path) {
+        int rotation = 0;
+        try {
+            ExifInterface exif = new ExifInterface(path);
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL);
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotation = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotation = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotation = 270;
+                    break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rotation;
+    }
+
     private void loadImage(Intent data) {
         Bitmap bmp = data.getParcelableExtra("data");
         if (bmp != null) {
@@ -66,6 +96,7 @@ public class SimpleCameraSampleActivity extends Activity implements OnClickListe
         Uri uri = data.getParcelableExtra(MediaStore.EXTRA_OUTPUT);
         if (uri != null) {
             mImage.setImageURI(uri);
+            mImage.setRotation(getPictureRotation(uri));
         }
     }
 
