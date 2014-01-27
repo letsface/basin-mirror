@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.hardware.Camera;
@@ -39,11 +40,13 @@ public class CameraActivity extends Activity implements OnClickListener,
 
     private static final String EXTRA_FRONT_CAMERA = "extra_front_camera";
     private static final String EXTRA_CONFIRM = "extra_confirm";
+    private static final String EXTRA_HEIGHT = "extra_height";
 
     public static class IntentBuilder {
 
         private Context mContext;
         private boolean mUseFront, mConfirm;
+        private int mHeight;
 
         public IntentBuilder(Context context) {
             mContext = context;
@@ -59,10 +62,16 @@ public class CameraActivity extends Activity implements OnClickListener,
             return this;
         }
 
+        public IntentBuilder setDesiredImageHeight(int height) {
+            mHeight = height;
+            return this;
+        }
+
         public Intent build() {
             Intent intent = new Intent(mContext, CameraActivity.class);
             intent.putExtra(EXTRA_FRONT_CAMERA, mUseFront);
             intent.putExtra(EXTRA_CONFIRM, mConfirm);
+            intent.putExtra(EXTRA_HEIGHT, mHeight);
             return intent;
         }
 
@@ -74,6 +83,10 @@ public class CameraActivity extends Activity implements OnClickListener,
 
     private boolean needsConfirm() {
         return getIntent().getBooleanExtra(EXTRA_CONFIRM, false);
+    }
+
+    private int getDesiredImageHeight() {
+        return getIntent().getIntExtra(EXTRA_HEIGHT, 0);
     }
 
     private CameraHolder mCameraHolder;
@@ -181,9 +194,10 @@ public class CameraActivity extends Activity implements OnClickListener,
 
     private Bitmap getPreviewPicture() {
         // limit the size of the parcelable
-        int targetW = 100;
-        int targetH = 100;
+        return getPreviewPicture(100, 100);
+    }
 
+    private Bitmap getPreviewPicture(int targetW, int targetH) {
         BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(mPictureFilePath, opts);
@@ -229,10 +243,31 @@ public class CameraActivity extends Activity implements OnClickListener,
         }
     }
 
+    private String saveImageCopy(int h) {
+        Bitmap bmp = getPreviewPicture(h, h);
+        try {
+            File fo = getOutputFile();
+            FileOutputStream fos = new FileOutputStream(fo);
+            try {
+                bmp.compress(CompressFormat.JPEG, 90, fos);
+                return fo.getAbsolutePath();
+            } finally {
+                fos.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return mPictureFilePath;
+    }
+
     private void confirmed() {
         Intent intent = new Intent();
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(mPictureFilePath)));
         intent.putExtra("data", getPreviewPicture());
+        int h = getDesiredImageHeight();
+        if (h > 0) {
+            mPictureFilePath = saveImageCopy(h);
+        }
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(mPictureFilePath)));
         setResult(RESULT_OK, intent);
         finish();
     }

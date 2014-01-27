@@ -41,6 +41,7 @@ public class SimpleCameraSampleActivity extends Activity implements OnClickListe
         Intent intent = new CameraActivity.IntentBuilder(this)
                 .setUseFrontCamera(mCameraSelect.getCheckedRadioButtonId() == R.id.front_camera)
                 .setConfirm(mConfirmCheck.isChecked())
+                .setDesiredImageHeight(480)
                 .build();
         startActivityForResult(intent, REQ_CAPTURE);
     }
@@ -66,8 +67,6 @@ public class SimpleCameraSampleActivity extends Activity implements OnClickListe
         Uri uri = data.getParcelableExtra(MediaStore.EXTRA_OUTPUT);
         if (uri != null) {
             mImage.setImageURI(uri);
-            int rotation = CameraActivity.getPictureRotation(uri);
-            mImage.setRotation(rotation);
         }
     }
 
