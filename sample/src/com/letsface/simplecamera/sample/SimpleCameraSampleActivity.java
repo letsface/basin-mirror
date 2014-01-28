@@ -47,13 +47,13 @@ public class SimpleCameraSampleActivity extends Activity implements OnClickListe
 
     @Override
     public void onClick(View view) {
-        new CameraActivity.IntentBuilder(this)
+        new CameraActivity.IntentBuilder()
                 .setUseFrontCamera(mCameraSelect.getCheckedRadioButtonId() == R.id.front_camera)
                 .setConfirm(mConfirmCheck.isChecked())
                 .setDesiredImageHeight(480)
                 .setUseSystemCamera(
                         mCameraActivitySelect.getCheckedRadioButtonId() == R.id.system_camera)
-                .start();
+                .start(this);
     }
 
     @Override

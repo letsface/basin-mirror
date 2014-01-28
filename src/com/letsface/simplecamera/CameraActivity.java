@@ -2,6 +2,8 @@
 package com.letsface.simplecamera;
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
@@ -44,14 +46,9 @@ public class CameraActivity extends Activity implements OnClickListener,
 
     public static class IntentBuilder {
 
-        private Activity mActivity;
         private boolean mUseFront, mConfirm;
         private int mHeight;
         private boolean mUseSystem;
-
-        public IntentBuilder(Activity activity) {
-            mActivity = activity;
-        }
 
         public IntentBuilder setUseFrontCamera(boolean useFront) {
             mUseFront = useFront;
@@ -73,20 +70,25 @@ public class CameraActivity extends Activity implements OnClickListener,
             return this;
         }
 
-        private Intent build() {
+        private Intent build(Context context) {
             if (mUseSystem) {
                 return new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             }
-            Intent intent = new Intent(mActivity, CameraActivity.class);
+            Intent intent = new Intent(context, CameraActivity.class);
             intent.putExtra(EXTRA_FRONT_CAMERA, mUseFront);
             intent.putExtra(EXTRA_CONFIRM, mConfirm);
             intent.putExtra(EXTRA_HEIGHT, mHeight);
             return intent;
         }
 
-        public void start() {
-            mActivity.startActivityForResult(build(), REQ_IMAGE_CAPTURE);
+        public void start(Activity activity) {
+            activity.startActivityForResult(build(activity), REQ_IMAGE_CAPTURE);
         }
+
+        public void start(Fragment fragment) {
+            fragment.startActivityForResult(build(fragment.getActivity()), REQ_IMAGE_CAPTURE);
+        }
+
     }
 
     public static class IntentResult {
