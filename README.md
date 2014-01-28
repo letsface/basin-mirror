@@ -20,12 +20,12 @@ A minimalist Android camera activity
 
 ## Usage
 ```java
-new CameraActivity.IntentBuilder(thisActivity)
+new CameraActivity.IntentBuilder()
     .setUseSystemCamera(false)
     .setUseFrontCamera(true)
     .setConfirm(true)
     .setDesiredImageHeight(480)
-    .start();
+    .start(activityOrFragment);
 ```
 ```java
 @Override
