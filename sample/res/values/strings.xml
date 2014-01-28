@@ -1,5 +1,13 @@
 <resources>
 
     <string name="app_name">SimpleCameraSample</string>
+    <string name="built_in_camera">Built-in camera</string>
+    <string name="system_camera">System camera</string>
+    <string name="back_camera">Back camera</string>
+    <string name="front_camera">Front camera</string>
+    <string name="confirm">Confirm</string>
+    <string name="capture">Capture</string>
+    <string name="cd_preview_image">Preview image</string>
+    <string name="cd_image">Image</string>
 
 </resources>

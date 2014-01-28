@@ -2,7 +2,6 @@
 package com.letsface.simplecamera;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
@@ -37,6 +36,7 @@ public class CameraActivity extends Activity implements OnClickListener,
         OnOrientationChangeListener {
 
     private static final int REQ_CONFIRM_PICTURE = 1000;
+    private static final int REQ_IMAGE_CAPTURE = 73846;
 
     private static final String EXTRA_FRONT_CAMERA = "extra_front_camera";
     private static final String EXTRA_CONFIRM = "extra_confirm";
@@ -44,12 +44,13 @@ public class CameraActivity extends Activity implements OnClickListener,
 
     public static class IntentBuilder {
 
-        private Context mContext;
+        private Activity mActivity;
         private boolean mUseFront, mConfirm;
         private int mHeight;
+        private boolean mUseSystem;
 
-        public IntentBuilder(Context context) {
-            mContext = context;
+        public IntentBuilder(Activity activity) {
+            mActivity = activity;
         }
 
         public IntentBuilder setUseFrontCamera(boolean useFront) {
@@ -67,12 +68,55 @@ public class CameraActivity extends Activity implements OnClickListener,
             return this;
         }
 
-        public Intent build() {
-            Intent intent = new Intent(mContext, CameraActivity.class);
+        public IntentBuilder setUseSystemCamera(boolean useSystem) {
+            mUseSystem = useSystem;
+            return this;
+        }
+
+        private Intent build() {
+            if (mUseSystem) {
+                return new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            }
+            Intent intent = new Intent(mActivity, CameraActivity.class);
             intent.putExtra(EXTRA_FRONT_CAMERA, mUseFront);
             intent.putExtra(EXTRA_CONFIRM, mConfirm);
             intent.putExtra(EXTRA_HEIGHT, mHeight);
             return intent;
+        }
+
+        public void start() {
+            mActivity.startActivityForResult(build(), REQ_IMAGE_CAPTURE);
+        }
+    }
+
+    public static class IntentResult {
+
+        private Bitmap mPreview;
+        private Uri mImageUri;
+
+        public static IntentResult parse(int requestCode, int resultCode, Intent data) {
+            if (requestCode != REQ_IMAGE_CAPTURE)
+                return null;
+            if (resultCode != RESULT_OK)
+                return null;
+            return new IntentResult(data);
+        }
+
+        private IntentResult(Intent data) {
+            mPreview = data.getParcelableExtra("data");
+            Uri uri = data.getParcelableExtra(MediaStore.EXTRA_OUTPUT);
+            if (uri == null) {
+                uri = data.getData();
+            }
+            mImageUri = uri;
+        }
+
+        public Bitmap getPreviewImage() {
+            return mPreview;
+        }
+
+        public Uri getImageUri() {
+            return mImageUri;
         }
 
     }
