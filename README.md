@@ -20,9 +20,21 @@ A minimalist Android camera activity
 
 ## Usage
 ```java
-Intent intent = new CameraActivity.IntentBuilder(context)
+new CameraActivity.IntentBuilder(thisActivity)
+    .setUseSystemCamera(false)
     .setUseFrontCamera(true)
     .setConfirm(true)
-    .build();
-startActivityForResult(intent, REQ_TAKE_PICTURE);
+    .setDesiredImageHeight(480)
+    .start();
+```
+```java
+@Override
+public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    CameraActivity.IntentResult result = CameraActivity.IntentResult.parse(requestCode, resultCode, data);
+    if (result != null) {
+        Bitmap bmp = result.getPreviewImage();
+        Uri uri = result.getImageUri();
+        // ...
+    }
+}
 ```
