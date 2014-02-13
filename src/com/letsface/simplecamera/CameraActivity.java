@@ -10,13 +10,10 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
-import android.hardware.Camera.PictureCallback;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,14 +22,12 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 
+import com.letsface.simplecamera.CameraUtil.PictureTakenCallback;
 import com.letsface.simplecamera.ScreenOrientationObserver.OnOrientationChangeListener;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 public class CameraActivity extends Activity implements OnClickListener,
         OnOrientationChangeListener {
@@ -194,41 +189,22 @@ public class CameraActivity extends Activity implements OnClickListener,
         }
     }
 
-    private void takePhoto() {
-        Camera camera = mCameraHolder.getCamera();
-        if (camera == null)
-            return;
-        camera.takePicture(null, null, mPictureCallback);
-    }
-
     private String mPictureFilePath;
 
-    private File getOutputFile() {
-        File storage = new File(Environment.getExternalStorageDirectory(), "BasinMirror");
-        storage.mkdirs();
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-                .format(new Date());
-        return new File(storage, "IMG_" + timestamp + ".jpg");
-    }
-
-    private final PictureCallback mPictureCallback = new PictureCallback() {
-        @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-            try {
-                File file = getOutputFile();
-                FileOutputStream fos = new FileOutputStream(file);
-                try {
-                    fos.write(data);
-                } finally {
-                    fos.close();
-                }
-                mPictureFilePath = file.getAbsolutePath();
+    private void takePhoto() {
+        new CameraUtil().takePhoto(mCameraHolder.getCamera(), new PictureTakenCallback() {
+            @Override
+            public void onPictureTaken(String path) {
+                mPictureFilePath = path;
                 afterPictureTaken();
-            } catch (IOException e) {
+            }
+
+            @Override
+            public void onError(Exception e) {
                 e.printStackTrace();
             }
-        }
-    };
+        });
+    }
 
     private void afterPictureTaken() {
         if (needsConfirm()) {
@@ -292,7 +268,7 @@ public class CameraActivity extends Activity implements OnClickListener,
     private String saveImageCopy(int h) {
         Bitmap bmp = getPreviewPicture(h, h);
         try {
-            File fo = getOutputFile();
+            File fo = CameraUtil.getOutputFile();
             FileOutputStream fos = new FileOutputStream(fo);
             try {
                 bmp.compress(CompressFormat.JPEG, 90, fos);
