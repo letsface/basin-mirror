@@ -1,6 +1,9 @@
 
 package com.letsface.simplecamera;
 
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
@@ -36,6 +39,41 @@ public class CameraUtil {
             return;
         mCallback = cb;
         camera.takePicture(mShutterCallback, null, mPictureCallback);
+    }
+
+    // TODO: DRY, duplicates in CameraActivity
+    public static String getScaledPicture(String picturePath, int targetDim) {
+        BitmapFactory.Options opts = new BitmapFactory.Options();
+        opts.inJustDecodeBounds = true;
+
+        BitmapFactory.decodeFile(picturePath);
+        int photoW = opts.outWidth;
+        int photoH = opts.outHeight;
+
+        int scaleFactor = Math.min(photoW / targetDim, photoH / targetDim);
+
+        opts.inJustDecodeBounds = false;
+        opts.inSampleSize = scaleFactor;
+        opts.inPurgeable = true;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(picturePath);
+        return saveImage(bitmap);
+    }
+
+    private static String saveImage(Bitmap bmp) {
+        try {
+            File fo = CameraUtil.getOutputFile();
+            FileOutputStream fos = new FileOutputStream(fo);
+            try {
+                bmp.compress(CompressFormat.JPEG, 90, fos);
+                return fo.getAbsolutePath();
+            } finally {
+                fos.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private final ShutterCallback mShutterCallback = new ShutterCallback() {

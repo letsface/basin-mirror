@@ -67,6 +67,17 @@ public class CameraHolder {
         mCamera.setParameters(params);
     }
 
+    private void setPictureSize() {
+        if (!ready())
+            return;
+        Camera.Parameters params = mCamera.getParameters();
+        Camera.Size size = params.getSupportedPictureSizes().get(0);
+        params.setPictureSize(size.width, size.height);
+        mCamera.setParameters(params);
+        params = mCamera.getParameters();
+        size = params.getPictureSize();
+    }
+
     private Camera.Size getOptimalPreviewSize() {
         float ratio = mRequestedPreviewWidth / (float) mRequestedPreviewHeight;
         long area = mRequestedPreviewWidth * mRequestedPreviewHeight;
@@ -98,6 +109,7 @@ public class CameraHolder {
         try {
             mCamera.setPreviewDisplay(mHolder);
             setPreviewSize();
+            setPictureSize();
             mCamera.startPreview();
         } catch (IOException e) {
             e.printStackTrace();
