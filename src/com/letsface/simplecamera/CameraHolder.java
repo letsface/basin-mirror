@@ -3,6 +3,7 @@ package com.letsface.simplecamera;
 
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
+import android.hardware.Camera.PreviewCallback;
 import android.view.SurfaceHolder;
 
 import java.io.IOException;
@@ -16,6 +17,8 @@ public class CameraHolder {
     private int mRequestedPreviewWidth, mRequestedPreviewHeight;
     private List<Camera.Size> mSupportedPreviewSizes;
     private int mCameraRotation;
+    private PreviewCallback mPreviewCallback;
+    private boolean mAutoFocus;
 
     public void setCameraId(int id) {
         mCameraId = id;
@@ -28,6 +31,14 @@ public class CameraHolder {
     void setPreviewSize(int width, int height) {
         mRequestedPreviewWidth = width;
         mRequestedPreviewHeight = height;
+    }
+
+    public void setPreviewCallback(PreviewCallback cb) {
+        mPreviewCallback = cb;
+    }
+
+    public void setAutoFocus(boolean autoFocus) {
+        mAutoFocus = autoFocus;
     }
 
     private void open() {
@@ -101,6 +112,18 @@ public class CameraHolder {
         return res;
     }
 
+    private void setAutoFocus() {
+        if (!ready() || !mAutoFocus) {
+            return;
+        }
+        Camera.Parameters params = mCamera.getParameters();
+        List<String> modes = params.getSupportedFocusModes();
+        if (modes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+            params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        }
+        mCamera.setParameters(params);
+    }
+
     public void start() {
         open();
         if (!ready())
@@ -109,7 +132,11 @@ public class CameraHolder {
         try {
             mCamera.setPreviewDisplay(mHolder);
             setPreviewSize();
-            setPictureSize();
+            // setPictureSize();
+            if (mPreviewCallback != null) {
+                mCamera.setPreviewCallback(mPreviewCallback);
+            }
+            setAutoFocus();
             mCamera.startPreview();
         } catch (IOException e) {
             e.printStackTrace();
@@ -125,6 +152,7 @@ public class CameraHolder {
         if (!ready())
             return;
 
+        mCamera.setPreviewCallback(null);
         mCamera.stopPreview();
         mCamera.release();
         mCamera = null;

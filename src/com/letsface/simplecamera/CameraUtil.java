@@ -5,9 +5,11 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,6 +19,8 @@ import java.util.Date;
 import java.util.Locale;
 
 public class CameraUtil {
+
+    private static final String TAG = "CameraUtil";
 
     public interface PictureTakenCallback {
         void onPictureTaken(String path);
@@ -38,7 +42,7 @@ public class CameraUtil {
         if (camera == null)
             return;
         mCallback = cb;
-        camera.takePicture(mShutterCallback, null, mPictureCallback);
+        camera.autoFocus(mAutoFocusCallback);
     }
 
     // TODO: DRY, duplicates in CameraActivity
@@ -46,21 +50,22 @@ public class CameraUtil {
         BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inJustDecodeBounds = true;
 
-        BitmapFactory.decodeFile(picturePath);
+        BitmapFactory.decodeFile(picturePath, opts);
         int photoW = opts.outWidth;
         int photoH = opts.outHeight;
 
-        int scaleFactor = Math.min(photoW / targetDim, photoH / targetDim);
+        int scaleFactor = Math.max(photoW / targetDim, photoH / targetDim);
 
         opts.inJustDecodeBounds = false;
         opts.inSampleSize = scaleFactor;
         opts.inPurgeable = true;
 
-        Bitmap bitmap = BitmapFactory.decodeFile(picturePath);
+        Bitmap bitmap = BitmapFactory.decodeFile(picturePath, opts);
+        Log.v(TAG, "scaled image size: " + bitmap.getWidth() + ", " + bitmap.getHeight());
         return saveImage(bitmap);
     }
 
-    private static String saveImage(Bitmap bmp) {
+    public static String saveImage(Bitmap bmp) {
         try {
             File fo = CameraUtil.getOutputFile();
             FileOutputStream fos = new FileOutputStream(fo);
@@ -75,6 +80,14 @@ public class CameraUtil {
         }
         return null;
     }
+
+    private final AutoFocusCallback mAutoFocusCallback = new AutoFocusCallback() {
+        @Override
+        public void onAutoFocus(boolean success, Camera camera) {
+            // capture no matter focus is successful or not
+            camera.takePicture(mShutterCallback, null, mPictureCallback);
+        }
+    };
 
     private final ShutterCallback mShutterCallback = new ShutterCallback() {
         @Override
