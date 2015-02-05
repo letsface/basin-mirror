@@ -45,7 +45,7 @@ public class CameraUtil {
         camera.autoFocus(mAutoFocusCallback);
     }
 
-    // TODO: DRY, duplicates in CameraActivity
+     // TODO: DRY, duplicates in CameraActivity
     public static String getScaledPicture(String picturePath, int targetDim) {
         BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inJustDecodeBounds = true;
